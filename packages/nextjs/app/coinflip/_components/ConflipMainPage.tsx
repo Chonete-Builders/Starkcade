@@ -1,14 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import StarryBackground from "~~/app/starryBackground/_components/starryBackground";
 
 export const ConflipMainPage = () => {
-  const [selectedChoice, setSelectedChoice] = useState(null);
-  const [selectedAmount, setSelectedAmount] = useState(null);
+  const [selectedChoice, setSelectedChoice] = useState("");
+  const [selectedAmount, setSelectedAmount] = useState(0);
 
   return (
-    <div className="relative flex justify-center items-center min-h-screen bg-gradient-to-r from-blue-600 to-purple-700 text-white">
-      <div className="text-center p-4 space-y-6">
+    <div className="relative flex justify-center items-center min-h-screen text-white overflow-hidden">
+      <StarryBackground />
+
+      <div className="relative text-center p-4 space-y-6 z-10">
         <div className="flex justify-center">
           <img
             src="/coin-removebg.png"
@@ -52,7 +55,9 @@ export const ConflipMainPage = () => {
                 key={amount}
                 onClick={() => setSelectedAmount(amount)}
                 className={`w-24 py-2 bg-yellow-500 text-black border-2 rounded-md font-bold transition ${
-                  selectedAmount === amount ? "border-white" : "border-transparent"
+                  selectedAmount === amount
+                    ? "border-white"
+                    : "border-transparent"
                 } hover:bg-yellow-400`}
               >
                 {amount} Strk
@@ -65,7 +70,9 @@ export const ConflipMainPage = () => {
                 key={amount}
                 onClick={() => setSelectedAmount(amount)}
                 className={`w-24 py-2 bg-yellow-500 text-black border-2 rounded-md font-bold transition ${
-                  selectedAmount === amount ? "border-white" : "border-transparent"
+                  selectedAmount === amount
+                    ? "border-white"
+                    : "border-transparent"
                 } hover:bg-yellow-400`}
               >
                 {amount} Strk
@@ -82,9 +89,6 @@ export const ConflipMainPage = () => {
             Double or Nothing
           </button>
         </div>
-      {/*   <p className="text-xs mt-4">
-          PRIORITY: MARKET <br /> WHALE MODE · TRY FREE
-        </p> */}
       </div>
     </div>
   );

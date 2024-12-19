@@ -221,6 +221,9 @@ module.exports = {
       },
       animation: {
         "pulse-fast": "pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        stars: "move 50s linear infinite",
+        "stars-slow": "move 100s linear infinite",
+        "stars-slower": "move 150s linear infinite",
       },
       backgroundImage: {
         "gradient-light":
@@ -232,6 +235,12 @@ module.exports = {
         "gradient-icon":
           "var(--gradient, linear-gradient(90deg, #42D2F1 0%, #B248DD 100%))",
       },
+      keyframes: {
+        move: {
+          from: { transform: "translateY(0px)" },
+          to: { transform: "translateY(-2000px)" },
+        },
+      }
     },
   },
 };
