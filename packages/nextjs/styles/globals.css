@@ -132,3 +132,41 @@ p {
     clip-path: polygon(100% 100%, 100% 0, 90% 100%);
   }
 }
+
+.recentflip{
+  background: var(--Schemes-Surface-Container-High, rgba(236, 230, 240, 1));
+  
+  top: 169px;
+  left: 248px;
+  gap: 0px;
+  border-radius: 28px;
+  opacity: 0px;
+ padding: 0px 24px;
+  
+}
+.recentflip h2{
+  padding: 24px 0 0;
+  gap: 16px;
+  opacity: 0px;
+  
+
+}
+
+.recentflip .btns{
+  background: rgba(242, 199, 28, 1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+gap: 8px;
+border-radius: 100px ;
+opacity: 0px;
+
+
+}
+
+.recentflip .content{
+ 
+min-height:  56px;
+opacity: 0px;
+
+}

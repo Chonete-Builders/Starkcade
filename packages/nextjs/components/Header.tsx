@@ -25,6 +25,11 @@ export const menuLinks: HeaderMenuLink[] = [
     href: "/coinflip",
     icon: <CircleStackIcon className="h-4 w-4" />,
   },
+  {
+    label: "Recentflips",
+    href: "/recentflips",
+    icon: <CircleStackIcon className="h-4 w-4" />,
+  },
 ];
 
 export const HeaderMenuLinks = () => {

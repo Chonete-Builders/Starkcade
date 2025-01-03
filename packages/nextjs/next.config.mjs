@@ -1,4 +1,3 @@
-/** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
   typescript: {
@@ -7,9 +6,19 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: process.env.NEXT_PUBLIC_IGNORE_BUILD_ERROR === "true",
   },
-  webpack: (config) => {
-    config.resolve.fallback = { fs: false, net: false, tls: false };
-    config.externals.push("pino-pretty", "lokijs", "encoding");
+  webpack: (config, { webpack }) => {
+    config.experiments = { ...config.experiments, topLevelAwait: true };
+    config.externals["node:fs"] = "commonjs node:fs";
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+    };
+    config.plugins.push(
+      new webpack.NormalModuleReplacementPlugin(/^node:/, (resource) => {
+        resource.request = resource.request.replace(/^node:/, "");
+      })
+    );
+
     return config;
   },
 };
