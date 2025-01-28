@@ -3,7 +3,6 @@
 import { useState } from "react";
 import CoinFlip from "../../coinflipAnimation";
 
-
 export const ConflipPlayPage = () => {
   const [selectedChoice, setSelectedChoice] = useState("");
   const [selectedAmount, setSelectedAmount] = useState(0);
@@ -21,9 +20,11 @@ export const ConflipPlayPage = () => {
           <h1 className="text-yellow-600 font-[600] text-[25px]">
             Please wait, transaction is processing...
           </h1>
-      <div className="relative text-center p-4 space-y-6 -z-5">
-        <div className="flex justify-center">
-          <CoinFlip src="/coin-removebg.png" />
+          <div className="relative text-center p-4 space-y-6 -z-5">
+            <div className="flex justify-center">
+              <CoinFlip src="/coin-removebg.png" />
+            </div>
+          </div>
         </div>
       ) : (
         <div className="relative text-center p-4 space-y-6 -z-5">
