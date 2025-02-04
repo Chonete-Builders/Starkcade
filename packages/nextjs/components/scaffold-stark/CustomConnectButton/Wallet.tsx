@@ -35,6 +35,7 @@ const Wallet = ({
       }}
     >
       <div className="h-[1.5rem] w-[1.5rem] rounded-[5px] overflow-hidden relative">
+        
         <Image
           alt={connector.name}
           loader={loader}
