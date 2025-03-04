@@ -1,3 +1,4 @@
+use starknet::{ContractAddress};
 #[starknet::interface]
 trait ICoinflip<TContractState> {
     // * Read functions
@@ -23,9 +24,18 @@ trait ICoinflip<TContractState> {
 #[starknet::contract]
 mod Coinflip {
     use core::array::ArrayTrait;
-    use openzeppelin::access::ownable::OwnableComponent;
-    use openzeppelin::token::erc20::interface::{IERC20Dispatcher, IERC20DispatcherTrait};
-    use starknet::{ContractAddress, get_block_timestamp, get_caller_address, get_contract_address};
+    use core::hash::{HashStateTrait, HashStateExTrait};
+    use core::pedersen::PedersenTrait;
+    use openzeppelin_access::ownable::OwnableComponent;
+    use openzeppelin_token::erc20::interface::{IERC20Dispatcher, IERC20DispatcherTrait};
+    use starknet::storage::{
+        StorageMapReadAccess, StoragePointerReadAccess, StoragePointerWriteAccess,
+        StorageMapWriteAccess, Map, Vec, VecTrait, StoragePathEntry, MutableVecTrait
+    };
+    use starknet::{
+        ContractAddress, get_block_timestamp, get_caller_address, get_contract_address,
+        contract_address::contract_address_const
+    };
 
     component!(path: OwnableComponent, storage: ownable, event: OwnableEvent);
 
@@ -41,8 +51,9 @@ mod Coinflip {
     const PERCENTAGE_BASE: u256 = 10000; // Base for percentage calculations
 
     // STRK Token address - Should be changed for different networks
-    #[storage]
-    const STRK_ADDRESS: ContractAddress = 0xde29d060D45901Fb19ED6C6e959EB22d8626708e;
+    pub fn STRK_ADDRESS() -> ContractAddress {
+        contract_address_const::<0xde29d060D45901Fb19ED6C6e959EB22d8626708e>()
+    }
 
     #[event]
     #[derive(Drop, starknet::Event)]
@@ -102,8 +113,8 @@ mod Coinflip {
         bets: Map<ContractAddress, u256>,
         selected_results: Map<ContractAddress, bool>,
         leaderboard: Map<u8, (ContractAddress, u256)>,
-        recent_flips: Array<(ContractAddress, bool, u256)>,
-        user_flips: Map<ContractAddress, Array<(bool, u256)>>,
+        recent_flips: Vec<(ContractAddress, bool, u256)>,
+        user_flips: Map<ContractAddress, Vec<(bool, u256)>>,
         #[substorage(v0)]
         ownable: OwnableComponent::Storage,
     }
@@ -117,10 +128,10 @@ mod Coinflip {
     }
 
     #[abi(embed_v0)]
-    impl CoinflipImpl of ICoinflip<ContractState> {
+    impl CoinflipImpl of super::ICoinflip<ContractState> {
         // View functions
         fn get_contract_balance(self: @ContractState) -> u256 {
-            IERC20Dispatcher { contract_address: STRK_ADDRESS }.balance_of(get_contract_address())
+            IERC20Dispatcher { contract_address: STRK_ADDRESS() }.balance_of(get_contract_address())
         }
 
         fn get_leaderboard(self: @ContractState) -> Array<(ContractAddress, u256)> {
@@ -137,11 +148,21 @@ mod Coinflip {
         }
 
         fn get_recent_flips(self: @ContractState) -> Array<(ContractAddress, bool, u256)> {
-            self.recent_flips.read_all()
+            let mut recent_flips_array = ArrayTrait::new();
+            let len = self.recent_flips.len();
+            for i in 0..len {
+                recent_flips_array.append(self.recent_flips.at(i).read());
+            };
+            recent_flips_array
         }
 
         fn get_user_flips(self: @ContractState, user: ContractAddress) -> Array<(bool, u256)> {
-            self.user_flips.read(user)
+            let mut user_flips_array = ArrayTrait::new();
+            let len = self.user_flips.entry(user).len();
+            for i in 0..len {
+                user_flips_array.append(self.user_flips.entry(user).at(i).read());
+            };
+            user_flips_array
         }
 
         fn get_min_bet(self: @ContractState) -> u256 {
@@ -198,7 +219,7 @@ mod Coinflip {
             assert(self.bets.read(caller) == 0, 'Pending bet exists');
 
             // Transfer tokens
-            let token = IERC20Dispatcher { contract_address: STRK_ADDRESS };
+            let token = IERC20Dispatcher { contract_address: STRK_ADDRESS() };
             token.transfer_from(caller, get_contract_address(), amount);
 
             // Store bet
@@ -232,7 +253,7 @@ mod Coinflip {
             // Process payout
             if won {
                 let payout = self._calculate_payout(bet_amount);
-                IERC20Dispatcher { contract_address: STRK_ADDRESS }.transfer(caller, payout);
+                IERC20Dispatcher { contract_address: STRK_ADDRESS() }.transfer(caller, payout);
             }
 
             // Clear bet
@@ -264,7 +285,7 @@ mod Coinflip {
 
         fn withdraw(ref self: ContractState, amount: u256) {
             self.ownable.assert_only_owner();
-            let token = IERC20Dispatcher { contract_address: STRK_ADDRESS };
+            let token = IERC20Dispatcher { contract_address: STRK_ADDRESS() };
             let balance = token.balance_of(get_contract_address());
             assert(amount <= balance, 'Insufficient balance');
             token.transfer(self.ownable.owner(), amount);
@@ -300,9 +321,11 @@ mod Coinflip {
         }
 
         fn _generate_outcome(self: @ContractState) -> bool {
-            // TODO: Replace with a more secure randomness source
-            let block_hash = starknet::get_block_hash();
-            block_hash.low % 2 == 0
+            let timestamp = get_block_timestamp();
+
+            let output = PedersenTrait::new(0).update_with(timestamp).finalize();
+            let random_value: u256 = output.into();
+            (random_value % 2) == 0
         }
 
         fn _update_leaderboard(ref self: ContractState, user: ContractAddress, amount: u256) {
@@ -311,7 +334,7 @@ mod Coinflip {
                 if current_position > MAX_LEADERBOARD_SIZE {
                     break;
                 }
-                let (current_user, current_amount) = self.leaderboard.read(current_position);
+                let (_current_user, current_amount) = self.leaderboard.read(current_position);
                 if amount > current_amount {
                     // Shift existing entries down
                     let mut shift_position = MAX_LEADERBOARD_SIZE;
@@ -331,32 +354,44 @@ mod Coinflip {
             };
         }
 
+
         fn _update_recent_flips(
-            ref self: ContractState, user: ContractAddress, outcome: bool, amount: u256,
+            ref self: ContractState, user: ContractAddress, outcome: bool, amount: u256
         ) {
-            let mut flips = self.recent_flips.read_all();
+            // Copy the stored vector into a memory array
+            let mut flips = self.get_recent_flips();
+
             if flips.len() >= MAX_RECENT_FLIPS {
-                let mut i = 0;
                 let mut new_flips = ArrayTrait::new();
-                loop {
-                    if i >= flips.len() - 1 {
-                        break;
-                    }
-                    new_flips.append(flips[i + 1]);
-                    i += 1;
+                let new_len = flips.len();
+                // Copy all entries except the first (oldest)
+                for i in 1..new_len {
+                    new_flips.append(*flips.at(i));
                 };
                 flips = new_flips;
             }
+            // Append the new flip
             flips.append((user, outcome, amount));
-            self.recent_flips.write_all(flips);
+
+            let updated_len = flips.len();
+            for i in 0..updated_len {
+                self.recent_flips.at(i.into()).write(*flips.at(i));
+            };
         }
 
         fn _update_user_flips(
             ref self: ContractState, user: ContractAddress, outcome: bool, amount: u256,
         ) {
-            let mut flips = self.user_flips.read(user);
+            // Copy the user's flips into a memory array using the getter.
+            let mut flips = self.get_user_flips(user);
+            // Append the new flip record (a tuple of (bool, u256)).
             flips.append((outcome, amount));
-            self.user_flips.write(user, flips);
+
+            let updated_len = flips.len();
+            for i in 0
+                ..updated_len {
+                    self.user_flips.entry(user).at(i.into()).write(*flips.at(i));
+                }
         }
 
         fn _emit_config_update(ref self: ContractState) {
