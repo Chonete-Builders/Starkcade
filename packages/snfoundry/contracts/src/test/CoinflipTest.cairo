@@ -103,3 +103,4 @@ fn test_contract_balance_updates() {
     // Balance should be 0 after payout (assuming user won)
     assert(dispatcher.get_contract_balance() == 0, 'Contract balance not updated after flip');
 } 
+// 
