@@ -19,14 +19,14 @@ fn OWNER() -> ContractAddress {
 fn deploy_coinflip(min_bet: u256, max_bet: u256) -> ContractAddress {
     let contract_class = declare("Coinflip").unwrap().contract_class();
     let mut calldata = array![];
-    
+
     // Add constructor parameters
     calldata.append(OWNER().into());
     calldata.append(min_bet.low.into());
     calldata.append(min_bet.high.into());
     calldata.append(max_bet.low.into());
     calldata.append(max_bet.high.into());
-    
+
     let (contract_address, _) = contract_class.deploy(@calldata).unwrap();
     contract_address
 }
@@ -38,15 +38,15 @@ fn test_initial_state() {
     let min_bet = 10000000000000000_u256; // 0.01 ETH
     let max_bet = 1000000000000000000_u256; // 1 ETH
     let contract_address = deploy_coinflip(min_bet, max_bet);
-    
+
     // Create contract dispatcher
     let coinflip = ICoinflipDispatcher { contract_address };
-    
+
     // Test view functions
     let retrieved_min_bet = coinflip.get_min_bet();
     let retrieved_max_bet = coinflip.get_max_bet();
     let house_edge = coinflip.get_house_edge();
-    
+
     // Verify results
     assert(retrieved_min_bet == min_bet, 'Wrong min bet');
     assert(retrieved_max_bet == max_bet, 'Wrong max bet');
@@ -60,11 +60,11 @@ fn test_house_edge_default() {
     let min_bet = 10000000000000000_u256; // 0.01 ETH
     let max_bet = 1000000000000000000_u256; // 1 ETH
     let contract_address = deploy_coinflip(min_bet, max_bet);
-    
+
     // Create contract dispatcher
     let coinflip = ICoinflipDispatcher { contract_address };
-    
+
     // Test initial house_edge
     let house_edge = coinflip.get_house_edge();
     assert(house_edge == 500, 'Wrong initial house_edge'); // Default is 500 (5%)
-} 
+}
