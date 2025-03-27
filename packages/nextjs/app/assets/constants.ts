@@ -1,3 +1,6 @@
+// set MAX_LEADERBOARD_SIZE here
+const MAX_LEADERBOARD_SIZE = 10;
+
 export const MY_FLIPS = [
   {
     imageSrc: "/happy_coin.png",
@@ -19,7 +22,6 @@ export const MY_FLIPS = [
   },
 ];
 
-
 export const FLIPS = [
   {
     user: "Ricardish",
@@ -40,7 +42,6 @@ export const FLIPS = [
     icon: "/happy_coin.png",
   },
 ];
-
 
 export const TRANSACTIONS = [
   {
@@ -65,9 +66,6 @@ export const TRANSACTIONS = [
   },
 ];
 
-
-
-
 export const LEADERBOARD = [
   {
     imageSrc: "/starkcade.png",
@@ -91,7 +89,6 @@ export const LEADERBOARD = [
     imageAlt: "User Avatar",
   },
 ];
-
 
 export const LIVE_STATS = [
   {
@@ -137,3 +134,40 @@ export const CONNECTED_USERS = [
     imageAlt: "User Avatar",
   },
 ];
+
+export function _update_leaderboard(username: string, amount: number, time: number) {
+  // check if user exist or not
+  let existingUser = LEADERBOARD.find((entry) => entry.username === username);
+
+  if (existingUser) {
+    // update bet amount and time
+    existingUser.amount += amount;
+    existingUser.time = time;
+  } else {
+    // push new user if doesn't exist
+    LEADERBOARD.push({
+      imageSrc: "/starkcade.png",
+      username,
+      amount,
+      time,
+      imageAlt: "User Avatar",
+    });
+  }
+
+  // sort leaderboard depends on amount
+  LEADERBOARD.sort((a, b) => {
+  // sort depends on amount first
+  if (b.amount !== a.amount) 
+  {
+    return b.amount - a.amount;
+  }
+
+  // sort depends on time if the same amount, and the latest will be the front
+  return b.time - a.time;
+  }
+
+  // keep MAX_LEADERBOARD_SIZE on leaderboard
+  if (LEADERBOARD.length > MAX_LEADERBOARD_SIZE) {
+    LEADERBOARD.length = MAX_LEADERBOARD_SIZE;
+  }
+}
