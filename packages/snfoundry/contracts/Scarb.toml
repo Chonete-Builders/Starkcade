@@ -14,6 +14,7 @@ openzeppelin_token = "0.17.0"
 [dev-dependencies]
 openzeppelin_utils = "0.17.0"
 snforge_std = "0.31.0"
+cairo_test = "2.8.4"
 
 [[target.starknet-contract]]
 casm = true
@@ -25,3 +26,10 @@ sort-module-level-items = true
 name = "SEPOLIA_LATEST"
 url = "https://starknet-sepolia.public.blastapi.io/rpc/v0_7"
 block_id.tag = "latest"
+
+# Add these configuration to make scarb test work with snforge
+[tool.snforge]
+exit_first = true
+
+[scripts]
+test = "snforge test"
