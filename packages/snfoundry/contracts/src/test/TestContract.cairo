@@ -1,3 +1,4 @@
+use contracts::Coinflip::{ICoinflipDispatcher, ICoinflipDispatcherTrait};
 use contracts::YourContract::{IYourContractDispatcher, IYourContractDispatcherTrait};
 use openzeppelin_token::erc20::interface::{IERC20Dispatcher, IERC20DispatcherTrait};
 use openzeppelin_utils::serde::SerializedAppend;
@@ -16,6 +17,17 @@ fn deploy_contract(name: ByteArray) -> ContractAddress {
     let contract_class = declare(name).unwrap().contract_class();
     let mut calldata = array![];
     calldata.append_serde(OWNER());
+    let (contract_address, _) = contract_class.deploy(@calldata).unwrap();
+    contract_address
+}
+
+
+fn deploy_coinflip() -> ContractAddress {
+    let contract_class = declare("Coinflip").unwrap().contract_class();
+    let mut calldata = array![];
+    calldata.append_serde(OWNER());
+    calldata.append_serde(1000000_u256); // min_bet (1 token)
+    calldata.append_serde(100000000_u256); // max_bet (100 tokens)
     let (contract_address, _) = contract_class.deploy(@calldata).unwrap();
     contract_address
 }
@@ -59,3 +71,77 @@ fn test_transfer() {
     assert(your_contract_dispatcher.greeting() == new_greeting, 'Should allow set new message');
 }
 
+#[test]
+#[should_panic(expected: 'House edge too high')]
+fn test_verify_house_edge_bug() {
+    // Deploy the Coinflip contract
+    let contract_address = deploy_coinflip();
+    let dispatcher = ICoinflipDispatcher { contract_address };
+
+    // Set caller as the owner
+    cheat_caller_address(contract_address, OWNER(), CheatSpan::TargetCalls(2));
+
+    // Verify initial house edge (default is 500 = 5%)
+    let initial_edge = dispatcher.get_house_edge();
+    assert(initial_edge == 500, 'Default edge should be 5%');
+
+    // Try to set house edge to 15% (1500)
+    dispatcher.set_house_edge(1500);
+}
+
+#[test]
+fn test_set_valid_house_edge() {
+    let contract_address = deploy_coinflip();
+    let dispatcher = ICoinflipDispatcher { contract_address };
+
+    cheat_caller_address(contract_address, OWNER(), CheatSpan::TargetCalls(1));
+
+    // Set a valid house edge (8%)
+    dispatcher.set_house_edge(800);
+
+    let updated_edge = dispatcher.get_house_edge();
+    assert(updated_edge == 800, 'House edge should be 8%');
+}
+
+#[test]
+#[should_panic(expected: 'House edge too high')]
+fn test_edge_case_house_edge_1001() {
+    let contract_address = deploy_coinflip();
+    let dispatcher = ICoinflipDispatcher { contract_address };
+
+    cheat_caller_address(contract_address, OWNER(), CheatSpan::TargetCalls(1));
+
+    // Try to set house edge to 10.01% (1001)
+    // This should revert because it's just over the limit
+    dispatcher.set_house_edge(1001);
+}
+
+#[test]
+fn test_boundary_house_edge_1000() {
+    let contract_address = deploy_coinflip();
+    let dispatcher = ICoinflipDispatcher { contract_address };
+
+    cheat_caller_address(contract_address, OWNER(), CheatSpan::TargetCalls(1));
+
+    // Set house edge to exactly 10% (1000)
+    // This should be accepted as it's exactly at the limit
+    dispatcher.set_house_edge(1000);
+
+    let updated_edge = dispatcher.get_house_edge();
+    assert(updated_edge == 1000, 'House edge should be 10%');
+}
+
+#[test]
+fn test_boundary_house_edge_999() {
+    let contract_address = deploy_coinflip();
+    let dispatcher = ICoinflipDispatcher { contract_address };
+
+    cheat_caller_address(contract_address, OWNER(), CheatSpan::TargetCalls(1));
+
+    // Set house edge to 9.99% (999)
+    // This should be accepted as it's under the limit
+    dispatcher.set_house_edge(999);
+
+    let updated_edge = dispatcher.get_house_edge();
+    assert(updated_edge == 999, 'House edge should be 9.99%');
+}

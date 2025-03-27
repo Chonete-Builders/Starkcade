@@ -1,6 +1,6 @@
 use starknet::{ContractAddress};
 #[starknet::interface]
-trait ICoinflip<TContractState> {
+pub trait ICoinflip<TContractState> {
     // * Read functions
     fn get_contract_balance(self: @TContractState) -> u256;
     fn get_leaderboard(self: @TContractState) -> Array<(ContractAddress, u256)>;
@@ -22,7 +22,7 @@ trait ICoinflip<TContractState> {
 }
 
 #[starknet::contract]
-mod Coinflip {
+pub mod Coinflip {
     use core::array::ArrayTrait;
     use core::hash::{HashStateTrait, HashStateExTrait};
     use core::pedersen::PedersenTrait;
@@ -307,7 +307,7 @@ mod Coinflip {
 
         fn set_house_edge(ref self: ContractState, new_edge: u256) {
             self.ownable.assert_only_owner();
-            assert(new_edge <= 1000, 'House edge too high'); // Max 10%
+            assert(new_edge <= 1000_u256, 'House edge too high'); // Max 10%
             self.house_edge.write(new_edge);
             self._emit_config_update();
         }
