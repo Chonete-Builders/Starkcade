@@ -9,7 +9,7 @@ import { green } from "./helpers/colorize-log";
 /**
  * Deploy a contract using the specified parameters.
  *
- * @example (deploy contract with contructorArgs)
+ * @example (deploy contract with constructorArgs)
  * const deployScript = async (): Promise<void> => {
  *   await deployContract(
  *     {
@@ -25,7 +25,7 @@ import { green } from "./helpers/colorize-log";
  *   );
  * };
  *
- * @example (deploy contract without contructorArgs)
+ * @example (deploy contract without constructorArgs)
  * const deployScript = async (): Promise<void> => {
  *   await deployContract(
  *     {
@@ -38,12 +38,12 @@ import { green } from "./helpers/colorize-log";
  *   );
  * };
  *
- *
  * @returns {Promise<void>}
  */
 const deployScript = async (): Promise<void> => {
   await deployContract({
-    contract: "YourContract",
+    contract: "Coinflip",
+    contractName: "Coinflip",
     constructorArgs: {
       owner: deployer.address,
     },
@@ -59,7 +59,7 @@ deployScript()
       })
       .catch((e) => {
         console.error(e);
-        process.exit(1); // exit with error so that non subsequent scripts are run
+        process.exit(1); 
       });
   })
   .catch(console.error);
