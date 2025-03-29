@@ -8,8 +8,9 @@ edition = "2023_11"
 [dependencies]
 starknet = "2.8.2"
 # Change to just "openzeppelin" to use full features
-openzeppelin_access = "0.17.0"
-openzeppelin_token = "0.17.0"
+#openzeppelin_access = "0.17.0"
+#openzeppelin_token = "0.17.0"
+openzeppelin = "0.17.0" 
 
 [dev-dependencies]
 openzeppelin_utils = "0.17.0"
@@ -25,3 +26,6 @@ sort-module-level-items = true
 name = "SEPOLIA_LATEST"
 url = "https://starknet-sepolia.public.blastapi.io/rpc/v0_7"
 block_id.tag = "latest"
+
+# [scripts]
+# test = "snforge test"
