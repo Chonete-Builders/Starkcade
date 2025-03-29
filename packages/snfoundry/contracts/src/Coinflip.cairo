@@ -52,7 +52,9 @@ pub mod Coinflip {
 
     // STRK Token address - Should be changed for different networks
     pub fn STRK_ADDRESS() -> ContractAddress {
-        contract_address_const::<0xde29d060D45901Fb19ED6C6e959EB22d8626708e>()
+        contract_address_const::<
+            0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d
+        >()
     }
 
     #[event]
@@ -374,8 +376,22 @@ pub mod Coinflip {
             flips.append((user, outcome, amount));
 
             let updated_len = flips.len();
-            for i in 0..updated_len {
-                self.recent_flips.at(i.into()).write(*flips.at(i));
+
+            let mut k = 0;
+            loop {
+                if k == updated_len {
+                    break;
+                }
+
+                // if recent flips vector is shorter then the updated length, then we need to
+                // append, otherwise we overwrite
+                if self.recent_flips.len() <= k.into() {
+                    self.recent_flips.append().write(*flips.at(k));
+                } else {
+                    self.recent_flips.at(k.into()).write(*flips.at(k));
+                }
+
+                k += 1;
             };
         }
 
@@ -384,14 +400,29 @@ pub mod Coinflip {
         ) {
             // Copy the user's flips into a memory array using the getter.
             let mut flips = self.get_user_flips(user);
+            let user_flips = self.get_user_flips(user);
+
             // Append the new flip record (a tuple of (bool, u256)).
             flips.append((outcome, amount));
 
             let updated_len = flips.len();
-            for i in 0
-                ..updated_len {
-                    self.user_flips.entry(user).at(i.into()).write(*flips.at(i));
+
+            let mut k = 0;
+            loop {
+                if k == updated_len {
+                    break;
                 }
+
+                // if recent flips vector is shorter then the updated length, then we need to
+                // append, otherwise we overwrite
+                if user_flips.len() <= k.into() {
+                    self.user_flips.entry(user).append().write(*flips.at(k));
+                } else {
+                    self.user_flips.entry(user).at(k.into()).write(*flips.at(k));
+                }
+
+                k += 1;
+            };
         }
 
         fn _emit_config_update(ref self: ContractState) {

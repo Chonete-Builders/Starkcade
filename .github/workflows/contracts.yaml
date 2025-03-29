@@ -27,11 +27,17 @@ jobs:
       - name: Install scarb
         uses: software-mansion/setup-scarb@v1
         with:
-          scarb-version: "2.8.4"
+          scarb-version: "2.8.2"
           scarb-lock: ./packages/snfoundry/contracts/Scarb.lock
 
+      - name: Install asdf
+        uses: asdf-vm/actions/setup@v3
+
       - name: Install snfoundry
-        uses: foundry-rs/setup-snfoundry@v3
+        run: |
+          asdf plugin add starknet-foundry || true
+          asdf install starknet-foundry 0.31.0
+          asdf global starknet-foundry 0.31.0
 
       - name: Check Code Format
         run: |
