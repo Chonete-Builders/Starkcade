@@ -24,10 +24,9 @@ sort-module-level-items = true
 
 [[tool.snforge.fork]]
 name = "SEPOLIA_LATEST"
-url = "https://starknet-sepolia.public.blastapi.io/rpc/v0_7"
+url = "http://51.195.57.196:6062/v0_7"
 block_id.tag = "latest"
 
-# Add these configuration to make scarb test work with snforge
 [tool.snforge]
 exit_first = true
 
